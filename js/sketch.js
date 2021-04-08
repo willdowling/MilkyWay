@@ -1,10 +1,12 @@
 var camera;
 var renderer;
+var scene;
+
+var SCREEN_WIDTH = window.innerWidth;
+var SCREEN_HEIGHT = window.innerHeight;
 
 function main()
 {
-  var SCREEN_WIDTH = window.innerWidth;
-  var SCREEN_HEIGHT = window.innerHeight;
   canvas = document.getElementById("canvas");
   canvas.width = SCREEN_WIDTH;
   canvas.height = SCREEN_HEIGHT;
@@ -18,24 +20,24 @@ function main()
 
   //Initialize Camera
   camera = new THREE.PerspectiveCamera(100, SCREEN_WIDTH/SCREEN_HEIGHT, 1, 1000);
-  camera.position.set(30,5,35);
+  camera.position.set(125,5,125);
 
   window.addEventListener('resize', onWindowResize);
   //Give new camera orbit controls
   const controls = new THREE.OrbitControls(camera, canvas);
-  controls.target.set(30,0,0);
+  controls.target.set(0,0,0);
 
 
   //Initialize Scene
-  const scene = new THREE.Scene();
+  scene = new THREE.Scene();
 
   var speed = {time : 1};
-  
+
+
 
   //GUI to change speed
   const gui = new dat.GUI({autoPlace: true});
   gui.add(speed, 'time', 0, 25, .2).name('speed of planets');
-
 
   //Load Textures for Planets
   const loader = new THREE.TextureLoader();
@@ -52,9 +54,12 @@ function main()
   const uranusTexture = loader.load("assets/uranus.jpg");
   const venusTexture = loader.load("assets/venus.jpg");
 
+
+
+  
   //Load Textures for skybox
   const cubeLoader = new THREE.CubeTextureLoader();
-  const texture = cubeLoader.load([
+  const corona = cubeLoader.load([
     "assets/corona_ft.png", 
     "assets/corona_bk.png",
     "assets/corona_up.png",
@@ -62,7 +67,45 @@ function main()
     "assets/corona_rt.png",
     "assets/corona_lf.png"
 ]);
-  scene.background = texture;
+const redEclipse = cubeLoader.load([
+  "assets/redeclipse_ft.png", 
+  "assets/redeclipse_bk.png",
+  "assets/redeclipse_up.png",
+  "assets/redeclipse_dn.png",
+  "assets/redeclipse_rt.png",
+  "assets/redeclipse_lf.png"
+]);
+const skyboxBlue = cubeLoader.load([
+  "assets/skybox1/1.png", 
+  "assets/skybox1/2.png",
+  "assets/skybox1/3.png",
+  "assets/skybox1/4.png",
+  "assets/skybox1/5.png",
+  "assets/skybox1/6.png"
+]);
+
+  scene.background = corona;
+//add GUI to allow changing of skybox
+  var skyboxFolder = gui.addFolder("skyboxes");
+  settings = {
+    'corona' : function(){
+      switchSkybox(corona, scene);
+    },
+    'red eclipse' : function(){
+      switchSkybox(redEclipse, scene);
+    },
+    'skybox blue' : function(){
+      switchSkybox(skyboxBlue, scene);
+    },
+    'skybox red' : function(){
+      switchSkybox(skyboxRed, scene);
+    }
+  }
+  skyboxFolder.add(settings, 'corona');
+  skyboxFolder.add(settings, 'red eclipse');
+  skyboxFolder.add(settings, 'skybox blue');
+
+
 
   //Convert loaded images to materials
   const earthMat = new THREE.MeshStandardMaterial({map:earthTexture});
@@ -81,61 +124,104 @@ function main()
   //Create spheres geometry to base each planet size from
   const geometry = new THREE.SphereGeometry(1,32,16);
   //Sun
+  const sunGroup = new THREE.Group();
   const sunMesh = new THREE.Mesh(geometry, sunMat);
-  sunMesh.position.set(0,0,0);
-  sunMesh.scale.setScalar(10);
-  scene.add(sunMesh);
+  createPlanet(scene, sunMesh, sunGroup, 0, 109);
 
 //Planet size is based off the scalar of Earth being 1
   
   //Mercury
   const mercuryGroup = new THREE.Group();
   const mercuryMesh = new THREE.Mesh(geometry, mercuryMat);
-  createPlanet(scene, mercuryMesh, mercuryGroup, 25, .38);
+  createPlanet(scene, mercuryMesh, mercuryGroup, 110, .38);
 
   //Venus
   const venusGroup = new THREE.Group();
   const venusMesh = new THREE.Mesh(geometry, venusMat);
-  createPlanet(scene, venusMesh, venusGroup, 28, .95);
+  createPlanet(scene, venusMesh, venusGroup, 150, .95);
 
   //Earth
   const earthGroup = new THREE.Group();
   const earthMesh = new THREE.Mesh(geometry, earthMat);
-  createPlanet(scene, earthMesh, earthGroup, 31, 1);
+  createPlanet(scene, earthMesh, earthGroup, 180, 1);
 
   //Mars
   const marsGroup = new THREE.Group();
   const marsMesh = new THREE.Mesh(geometry, marsMat);
-  createPlanet(scene, marsMesh, marsGroup, 34, .53);
+  createPlanet(scene, marsMesh, marsGroup, 215, .53);
   
   //Jupiter
   const jupiterGroup = new THREE.Group();
   const jupiterMesh = new THREE.Mesh(geometry, jupiterMat);
-  createPlanet(scene, jupiterMesh, jupiterGroup, 46, 11.2);
+  createPlanet(scene, jupiterMesh, jupiterGroup, 260, 11.2);
 
   //Saturn
   const saturnGroup = new THREE.Group();
   const saturnMesh = new THREE.Mesh(geometry, saturnMat);
-  createPlanet(scene, saturnMesh, saturnGroup, 67, 9.45);
+  createPlanet(scene, saturnMesh, saturnGroup, 320, 9.45);
 
   //Uranus
   const uranusGroup = new THREE.Group();
   const uranusMesh = new THREE.Mesh(geometry, uranusMat);
-  createPlanet(scene, uranusMesh, uranusGroup, 80, 4);
+  createPlanet(scene, uranusMesh, uranusGroup, 400, 4);
 
   //Neptune
   const neptuneGroup = new THREE.Group();
   const neptuneMesh = new THREE.Mesh(geometry, neptuneMat);
-  createPlanet(scene, neptuneMesh, neptuneGroup, 88, 3.88);
+  createPlanet(scene, neptuneMesh, neptuneGroup, 490, 3.88);
 
   //Pluto
   const plutoGroup = new THREE.Group();
   const plutoMesh = new THREE.Mesh(geometry, plutoMat);
-  createPlanet(scene, plutoMesh, plutoGroup, 93, 0.2);
+  createPlanet(scene, plutoMesh, plutoGroup, 580, 0.2);
+
+  var planetFolder = gui.addFolder("Planets");
+  settings = {
+    'sun' : function(){
+      moveCamera(sunMesh, sunGroup, camera, controls, false);
+    },
+    'mercury' : function(){
+      moveCamera(mercuryMesh, mercuryGroup, camera, controls, true);
+    },
+    'venus' : function(){
+      moveCamera(venusMesh, venusGroup, camera, controls, true);
+    },
+    'earth' : function(){
+      moveCamera(earthMesh, earthGroup, camera, controls, true);
+    },
+    'mars' : function(){
+      moveCamera(marsMesh, marsGroup, camera, controls, true);
+    },
+    'jupiter' : function(){
+      moveCamera(jupiterMesh, jupiterGroup, camera, controls, true);
+    },
+    'saturn' : function(){
+      moveCamera(saturnMesh, saturnGroup, camera, controls, true);
+    },
+    'uranus' : function(){
+      moveCamera(uranusMesh, uranusGroup, camera, controls, true);
+    },
+    'neptune' : function(){
+      moveCamera(neptuneMesh, neptuneGroup, camera, controls, true);
+    },
+    'pluto' : function(){
+      moveCamera(plutoMesh, plutoGroup, camera, controls, true);
+    }
+  }
+  planetFolder.add(settings, 'sun');
+  planetFolder.add(settings, 'mercury');
+  planetFolder.add(settings, 'venus');
+  planetFolder.add(settings, 'earth');
+  planetFolder.add(settings, 'mars');
+  planetFolder.add(settings, 'jupiter');
+  planetFolder.add(settings, 'saturn');
+  planetFolder.add(settings, 'uranus');
+  planetFolder.add(settings, 'neptune');
+  planetFolder.add(settings, 'pluto');
 
 
   //Initialize Lighting
-  const light = new THREE.PointLight("white", 1.25);
+  const light = new THREE.PointLight("white", 2.5);
   light.position.set(0,0,0);
   scene.add(light);
 
@@ -151,13 +237,14 @@ decimal places*/
 
     earthGroup.rotateY(.002 * speed.time);
     earthMesh.rotateY(.1 * speed.time);
+    earthMesh.rotateZ(.0001 * speed.time);
 
     mercuryGroup.rotateY(.0032 * speed.time);
     mercuryMesh.rotateY(.00069 * speed.time);
 
     venusGroup.rotateY(.0024 * speed.time);
     venusMesh.rotateY(.00041 * speed.time);
-    
+
     marsGroup.rotateY(.0016 * speed.time);
     marsMesh.rotateY(.05502 * speed.time);
 
@@ -175,13 +262,34 @@ decimal places*/
 
     plutoGroup.rotateY(.0003 * speed.time);
     plutoMesh.rotateY(.003 * speed.time);
-  
+    
     renderer.render(scene, camera);
 
     requestAnimationFrame( animate );
   };
   animate();
 };
+
+function moveCamera(mesh, meshGroup, camera, controls, following){
+  if(following){
+  var r = mesh.position.x;
+  var x = r * Math.cos(mesh.rotation.y);
+  var z = r * Math.sin(mesh.rotation.y)
+  console.log(x,z);
+  camera.position.x = x;
+  camera.position.z = z;
+  camera.lookAt(0,0,0);
+  controls.enabled = false;
+  meshGroup.add(camera);
+}
+  else{
+    meshGroup.add(camera);
+    camera.position.set(125,5,125);
+    camera.lookAt(0,0,0);
+    controls.enabled = true;
+    controls.target.set(0,0,0);
+  }
+}
 
 function createPlanet(scene, mesh, group, x, scale){
   mesh.position.set(x,0,0);
@@ -194,16 +302,18 @@ function createPlanet(scene, mesh, group, x, scale){
 function addSpotLight(scene){
   var colour = 0xFFFFFF;
   var intensity = 5;
-  var distance = 25;
+  var distance = 250;
   var angle = Math.PI/7;
 
   new Array(6).fill('').forEach((item, i) => {
     var spotlight = new THREE.SpotLight(colour, intensity, distance, angle);
-    var value = i % 2 === 0 ? 25 : -25;
+    var value = i % 2 === 0 ? 250 : -250;
     spotlight.position.set(i<2?value:0, i>=2&&i<4?value:0, i>=4?value:0);
     scene.add(spotlight);
   });
 }
+
+
 
 function onWindowResize() {
 
@@ -212,4 +322,8 @@ function onWindowResize() {
 
   renderer.setSize( window.innerWidth, window.innerHeight );
 
+}
+
+function switchSkybox(skyBox, scene){
+  scene.background = skyBox;
 }
