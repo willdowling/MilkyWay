@@ -1,10 +1,22 @@
 var camera;
+var controls;
 var renderer;
 var scene;
 
 var SCREEN_WIDTH = window.innerWidth;
 var SCREEN_HEIGHT = window.innerHeight;
 
+var mercuryCoord;
+var venusCoord;
+var earthCoord;
+var marsCoord;
+var jupiterCoord;
+var uranusCoord;
+var saturnCoord;
+var plutoCoord;
+
+var following;
+var followingMesh;
 function main()
 {
   canvas = document.getElementById("canvas");
@@ -24,7 +36,7 @@ function main()
 
   window.addEventListener('resize', onWindowResize);
   //Give new camera orbit controls
-  const controls = new THREE.OrbitControls(camera, canvas);
+  controls = new THREE.OrbitControls(camera, canvas);
   controls.target.set(0,0,0);
 
 
@@ -128,84 +140,99 @@ const skyboxBlue = cubeLoader.load([
   const sunMesh = new THREE.Mesh(geometry, sunMat);
   createPlanet(scene, sunMesh, sunGroup, 0, 109);
 
-//Planet size is based off the scalar of Earth being 1
+//Planet size is based off the scalar of Earth being 1 and the rest off
+//their real live realative sizes to Earth distances are not relative
+//to make them visible all in one viewport
   
   //Mercury
   const mercuryGroup = new THREE.Group();
   const mercuryMesh = new THREE.Mesh(geometry, mercuryMat);
-  createPlanet(scene, mercuryMesh, mercuryGroup, 110, .38);
+  createPlanet(scene, mercuryMesh, mercuryGroup, 260, .38);
 
   //Venus
   const venusGroup = new THREE.Group();
   const venusMesh = new THREE.Mesh(geometry, venusMat);
-  createPlanet(scene, venusMesh, venusGroup, 150, .95);
+  createPlanet(scene, venusMesh, venusGroup, 292, .95);
 
   //Earth
   const earthGroup = new THREE.Group();
   const earthMesh = new THREE.Mesh(geometry, earthMat);
-  createPlanet(scene, earthMesh, earthGroup, 180, 1);
+  createPlanet(scene, earthMesh, earthGroup, 330, 1);
 
   //Mars
   const marsGroup = new THREE.Group();
   const marsMesh = new THREE.Mesh(geometry, marsMat);
-  createPlanet(scene, marsMesh, marsGroup, 215, .53);
+  createPlanet(scene, marsMesh, marsGroup, 360, .53);
   
   //Jupiter
   const jupiterGroup = new THREE.Group();
   const jupiterMesh = new THREE.Mesh(geometry, jupiterMat);
-  createPlanet(scene, jupiterMesh, jupiterGroup, 260, 11.2);
+  createPlanet(scene, jupiterMesh, jupiterGroup, 480, 11.2);
 
   //Saturn
   const saturnGroup = new THREE.Group();
   const saturnMesh = new THREE.Mesh(geometry, saturnMat);
-  createPlanet(scene, saturnMesh, saturnGroup, 320, 9.45);
+  createPlanet(scene, saturnMesh, saturnGroup, 600, 9.45);
 
   //Uranus
   const uranusGroup = new THREE.Group();
   const uranusMesh = new THREE.Mesh(geometry, uranusMat);
-  createPlanet(scene, uranusMesh, uranusGroup, 400, 4);
+  createPlanet(scene, uranusMesh, uranusGroup, 700, 4);
 
   //Neptune
   const neptuneGroup = new THREE.Group();
   const neptuneMesh = new THREE.Mesh(geometry, neptuneMat);
-  createPlanet(scene, neptuneMesh, neptuneGroup, 490, 3.88);
+  createPlanet(scene, neptuneMesh, neptuneGroup, 800, 3.88);
 
   //Pluto
   const plutoGroup = new THREE.Group();
   const plutoMesh = new THREE.Mesh(geometry, plutoMat);
-  createPlanet(scene, plutoMesh, plutoGroup, 580, 0.2);
+  createPlanet(scene, plutoMesh, plutoGroup, 850, 0.2);
 
   var planetFolder = gui.addFolder("Planets");
   settings = {
     'sun' : function(){
-      moveCamera(sunMesh, sunGroup, camera, controls, false);
+      sunGroup.add(camera);
+      following = false;
+      camera.position.set(125,5,125);
+      camera.lookAt(0,0,0);
+      controls.target.set(0,0,0);
     },
     'mercury' : function(){
-      moveCamera(mercuryMesh, mercuryGroup, camera, controls, true);
+      following = true;
+      followingMesh = mercuryMesh;
     },
     'venus' : function(){
-      moveCamera(venusMesh, venusGroup, camera, controls, true);
+      following = true;
+      followingMesh = venusMesh;
     },
     'earth' : function(){
-      moveCamera(earthMesh, earthGroup, camera, controls, true);
+      following = true;
+      followingMesh = earthMesh;
     },
     'mars' : function(){
-      moveCamera(marsMesh, marsGroup, camera, controls, true);
+      following = true;
+      followingMesh = marsMesh;
     },
     'jupiter' : function(){
-      moveCamera(jupiterMesh, jupiterGroup, camera, controls, true);
+      following = true;
+      followingMesh = jupiterMesh;
     },
     'saturn' : function(){
-      moveCamera(saturnMesh, saturnGroup, camera, controls, true);
+      following = true;
+      followingMesh = saturnMesh;
     },
     'uranus' : function(){
-      moveCamera(uranusMesh, uranusGroup, camera, controls, true);
+      following = true;
+      followingMesh = uranusMesh;
     },
     'neptune' : function(){
-      moveCamera(neptuneMesh, neptuneGroup, camera, controls, true);
+      following = true;
+      followingMesh = neptuneMesh;
     },
     'pluto' : function(){
-      moveCamera(plutoMesh, plutoGroup, camera, controls, true);
+      following = true;
+      followingMesh = plutoMesh;
     }
   }
   planetFolder.add(settings, 'sun');
@@ -221,13 +248,17 @@ const skyboxBlue = cubeLoader.load([
 
 
   //Initialize Lighting
-  const light = new THREE.PointLight("white", 2.5);
+  const light = new THREE.PointLight("white", 1);
   light.position.set(0,0,0);
   scene.add(light);
 
   //Call addspotlight to illuminate sun mesh
   addSpotLight(scene);
   
+  //tilt earth 23.5 degrees or 0.4101524 radian as it is tilted this way 
+  //in real life
+
+  earthMesh.rotateZ(0.4101524);
   var animate=function() {
 /*Using earth as a baseline animation I've calculated the other 
 planets rotation and orbital speed based on their real life differences
@@ -235,60 +266,98 @@ orbital speeds being round to 3 decimal places and rotational speed to 5
 decimal places*/
     sunMesh.rotateY(.0001*speed.time);
 
-    earthGroup.rotateY(.002 * speed.time);
+    earthGroup.rotation. y += .002 * speed.time;
     earthMesh.rotateY(.1 * speed.time);
-    earthMesh.rotateZ(.0001 * speed.time);
-
-    mercuryGroup.rotateY(.0032 * speed.time);
-    mercuryMesh.rotateY(.00069 * speed.time);
-
-    venusGroup.rotateY(.0024 * speed.time);
-    venusMesh.rotateY(.00041 * speed.time);
-
-    marsGroup.rotateY(.0016 * speed.time);
-    marsMesh.rotateY(.05502 * speed.time);
-
-    jupiterGroup.rotateY(.0009 * speed.time);
-    jupiterMesh.rotateY(2.896 * speed.time);
-
-    saturnGroup.rotateY(.0007 * speed.time);
-    saturnMesh.rotateY(2.34053 * speed.time);
-
-    uranusGroup.rotateY(.0005 * speed.time);
-    uranusMesh.rotateY(.9399 * speed.time);
-
-    neptuneGroup.rotateY(.0004 * speed.time);
-    neptuneMesh.rotateY(.61747 * speed.time);
-
-    plutoGroup.rotateY(.0003 * speed.time);
-    plutoMesh.rotateY(.003 * speed.time);
+    earthCoord = calculateCoordinates(earthMesh.position.x, earthGroup.rotation.y);
     
+
+    mercuryGroup.rotation.y += .0032 * speed.time;
+    mercuryMesh.rotateY(.00069 * speed.time);
+    mercuryCoord = calculateCoordinates(mercuryMesh.position.x, mercuryGroup.rotation.y);
+
+    venusGroup.rotation.y += .0024 * speed.time;
+    venusMesh.rotateY(.00069 * speed.time);
+    venusCoord = calculateCoordinates(venusMesh.position.x, venusGroup.rotation.y);
+
+    marsGroup.rotation.y += .0016 * speed.time;
+    marsMesh.rotateY(.05502 * speed.time);
+    marsCoord = calculateCoordinates(marsMesh.position.x, marsGroup.rotation.y);
+
+    jupiterGroup.rotation.y += .0009 * speed.time;
+    jupiterMesh.rotateY(2.896 * speed.time);
+    jupiterCoord = calculateCoordinates(jupiterMesh.position.x, jupiterGroup.rotation.y);
+
+    saturnGroup.rotation.y += .0007 * speed.time;
+    saturnMesh.rotateY(2.34053 * speed.time);
+    saturnCoord = calculateCoordinates(saturnMesh.position.x, saturnGroup.rotation.y);
+
+    uranusGroup.rotation.y += .0005 * speed.time;
+    uranusMesh.rotateY(.9399 * speed.time);
+    uranusCoord = calculateCoordinates(uranusMesh.position.x, uranusGroup.rotation.y);
+
+    neptuneGroup.rotation.y += .0004 * speed.time;
+    neptuneMesh.rotateY(.61747 * speed.time);
+    neptuneCoord = calculateCoordinates(neptuneMesh.position.x, neptuneGroup.rotation.y);
+
+    plutoGroup.rotation.y += .0003 * speed.time;
+    plutoMesh.rotateY(.003 * speed.time);
+    plutoCoord = calculateCoordinates(plutoMesh.position.x, plutoGroup.rotation.y);
+    if(following){
+      switch(followingMesh){
+        case mercuryMesh:
+          moveCamera(mercuryMesh, mercuryCoord[0], mercuryCoord[1]);
+          break;
+        case venusMesh:
+          moveCamera(venusMesh, venusCoord[0], venusCoord[1]);
+          break;
+        case earthMesh:
+          moveCamera(earthMesh, earthCoord[0], earthCoord[1]);
+          break;
+        case marsMesh:
+          moveCamera(marsMesh, marsCoord[0], marsCoord[1]);
+          break;
+        case jupiterMesh:
+          moveCamera(jupiterMesh, jupiterCoord[0], jupiterCoord[1]);
+          break;
+        case saturnMesh:
+          moveCamera(saturnMesh, saturnCoord[0], saturnCoord[1]);
+          break;
+        case uranusMesh:
+          moveCamera(uranusMesh, uranusCoord[0], uranusCoord[1]);
+          break;
+        case neptuneMesh:
+          moveCamera(neptuneMesh, neptuneCoord[0], neptuneCoord[1]);
+          break;
+        case plutoMesh:
+          moveCamera(plutoMesh, plutoCoord[0], plutoCoord[1]);
+          break;
+      }
+    }
+
+
     renderer.render(scene, camera);
 
     requestAnimationFrame( animate );
+
+    
   };
   animate();
 };
 
-function moveCamera(mesh, meshGroup, camera, controls, following){
-  if(following){
-  var r = mesh.position.x;
-  var x = r * Math.cos(mesh.rotation.y);
-  var z = r * Math.sin(mesh.rotation.y)
-  console.log(x,z);
-  camera.position.x = x;
-  camera.position.z = z;
-  camera.lookAt(0,0,0);
-  controls.enabled = false;
-  meshGroup.add(camera);
+function calculateCoordinates(r, rotation){
+  var z = r * Math.cos(rotation + Math.PI/2);
+  var x = r * Math.sin(rotation + Math.PI/2);
+  
+  var coord = [x,z];
+  return coord;
 }
-  else{
-    meshGroup.add(camera);
-    camera.position.set(125,5,125);
-    camera.lookAt(0,0,0);
-    controls.enabled = true;
-    controls.target.set(0,0,0);
-  }
+
+function moveCamera(mesh,x,z){
+  camera.position.x = x + mesh.scale.x;
+  camera.position.z = z + mesh.scale.x;
+  
+  controls.target.set(x,1,z);
+  controls.update();
 }
 
 function createPlanet(scene, mesh, group, x, scale){
@@ -296,7 +365,6 @@ function createPlanet(scene, mesh, group, x, scale){
   mesh.scale.setScalar(scale);
   group.add(mesh);
   scene.add(group);
-  console.log("added planet");
 }
 
 function addSpotLight(scene){
