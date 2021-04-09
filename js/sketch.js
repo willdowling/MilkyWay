@@ -49,7 +49,7 @@ function main()
 
   //GUI to change speed
   const gui = new dat.GUI({autoPlace: true});
-  gui.add(speed, 'time', 0, 25, .2).name('speed of planets');
+  gui.add(speed, 'time', 0, 30, .1).name('speed of planets');
 
   //Load Textures for Planets
   const loader = new THREE.TextureLoader();
@@ -248,7 +248,7 @@ const skyboxBlue = cubeLoader.load([
 
 
   //Initialize Lighting
-  const light = new THREE.PointLight("white", 1);
+  const light = new THREE.PointLight("white", 12);
   light.position.set(0,0,0);
   scene.add(light);
 
@@ -261,47 +261,47 @@ const skyboxBlue = cubeLoader.load([
   earthMesh.rotateZ(0.4101524);
   var animate=function() {
 /*Using earth as a baseline animation I've calculated the other 
-planets rotation and orbital speed based on their real life differences
-orbital speeds being round to 3 decimal places and rotational speed to 5
-decimal places*/
+planets rotation and orbital speed based on their real life differences*/
     sunMesh.rotateY(.0001*speed.time);
 
-    earthGroup.rotation. y += .002 * speed.time;
-    earthMesh.rotateY(.1 * speed.time);
+    earthGroup.rotation. y += .00148 * speed.time;
+    earthMesh.rotateY(.001 * speed.time);
     earthCoord = calculateCoordinates(earthMesh.position.x, earthGroup.rotation.y);
     
 
-    mercuryGroup.rotation.y += .0032 * speed.time;
-    mercuryMesh.rotateY(.00069 * speed.time);
+    mercuryGroup.rotation.y += .00238 * speed.time;
+    mercuryMesh.rotateY(.000007 * speed.time);
     mercuryCoord = calculateCoordinates(mercuryMesh.position.x, mercuryGroup.rotation.y);
 
-    venusGroup.rotation.y += .0024 * speed.time;
-    venusMesh.rotateY(.00069 * speed.time);
+    venusGroup.rotation.y += .0017404 * speed.time;
+    venusMesh.rotateY(.0000004 * speed.time);
     venusCoord = calculateCoordinates(venusMesh.position.x, venusGroup.rotation.y);
 
-    marsGroup.rotation.y += .0016 * speed.time;
-    marsMesh.rotateY(.05502 * speed.time);
+    marsGroup.rotation.y += .001197 * speed.time;
+    marsMesh.rotateY(.00055 * speed.time);
     marsCoord = calculateCoordinates(marsMesh.position.x, marsGroup.rotation.y);
 
-    jupiterGroup.rotation.y += .0009 * speed.time;
-    jupiterMesh.rotateY(2.896 * speed.time);
+    jupiterGroup.rotation.y += .00064955 * speed.time;
+    jupiterMesh.rotateY(0.02896 * speed.time);
     jupiterCoord = calculateCoordinates(jupiterMesh.position.x, jupiterGroup.rotation.y);
 
-    saturnGroup.rotation.y += .0007 * speed.time;
-    saturnMesh.rotateY(2.34053 * speed.time);
+    saturnGroup.rotation.y += .00048157 * speed.time;
+    saturnMesh.rotateY(.023405 * speed.time);
     saturnCoord = calculateCoordinates(saturnMesh.position.x, saturnGroup.rotation.y);
 
-    uranusGroup.rotation.y += .0005 * speed.time;
-    uranusMesh.rotateY(.9399 * speed.time);
+    uranusGroup.rotation.y += .00033844 * speed.time;
+    uranusMesh.rotateY(.0093999 * speed.time);
     uranusCoord = calculateCoordinates(uranusMesh.position.x, uranusGroup.rotation.y);
 
-    neptuneGroup.rotation.y += .0004 * speed.time;
-    neptuneMesh.rotateY(.61747 * speed.time);
+    neptuneGroup.rotation.y += .0002696 * speed.time;
+    neptuneMesh.rotateY(.0061747 * speed.time);
     neptuneCoord = calculateCoordinates(neptuneMesh.position.x, neptuneGroup.rotation.y);
 
-    plutoGroup.rotation.y += .0003 * speed.time;
-    plutoMesh.rotateY(.003 * speed.time);
+    plutoGroup.rotation.y += .00023557 * speed.time;
+    plutoMesh.rotateY(.00002997 * speed.time);
     plutoCoord = calculateCoordinates(plutoMesh.position.x, plutoGroup.rotation.y);
+    
+    
     if(following){
       switch(followingMesh){
         case mercuryMesh:
