@@ -248,7 +248,7 @@ const skyboxBlue = cubeLoader.load([
 
 
   //Initialize Lighting
-  const light = new THREE.PointLight("white", 12);
+  const light = new THREE.PointLight("white", 1.75);
   light.position.set(0,0,0);
   scene.add(light);
 
@@ -356,7 +356,7 @@ function moveCamera(mesh,x,z){
   camera.position.x = x + mesh.scale.x;
   camera.position.z = z + mesh.scale.x;
   
-  controls.target.set(x,1,z);
+  controls.target.set(x,0,z);
   controls.update();
 }
 
